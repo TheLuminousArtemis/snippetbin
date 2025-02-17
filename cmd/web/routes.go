@@ -1,8 +1,12 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) routes() *http.ServeMux {
+	"github.com/justinas/alice"
+)
+
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
 	mux.HandleFunc("GET /{$}", app.home)
@@ -12,5 +16,7 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("GET /about", app.about)
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	return mux
+	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+	return standard.Then(mux)
+
 }
