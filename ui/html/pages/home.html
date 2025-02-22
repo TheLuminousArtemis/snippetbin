@@ -1,6 +1,14 @@
 {{define "title"}}Home{{end}}
 {{define "main"}}
-<h2>Latest Snippet</h2>
+<h2>
+    {{if gt (len .Snippets) 1}}
+    Latest Snippets
+    {{else if eq (len .Snippets) 1}}
+    Latest Snippet
+    {{else}}
+    No New Snippets
+    {{end}}
+</h2>
 {{if .Snippets}}
 <table>
     <tr>
