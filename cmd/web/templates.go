@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/models"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 )
 
 type templateData struct {
-	Snippet         models.Snippet
-	Snippets        []models.Snippet
+	Snippet         store.Snippet
+	Snippets        []store.Snippet
 	CurrentYear     int
 	Form            any
 	Flash           string

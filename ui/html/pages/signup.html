@@ -4,15 +4,15 @@
 <form action="/user/signup" method="POST" novalidate>
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div>
-        <label>Name:</label>
-        {{with .Form.FieldErrors.name}}
+        <label>Username:</label>
+        {{with .Form.FieldErrors.username}}
         <label class="error">{{.}}</label>
         {{end}}
-        <input type="text" name="name" value="{{.Form.Name}}">
+        <input type="text" name="username" value="{{.Form.Username}}">
     </div>
     <div>
         <label>Email:</label>
-        {{with .Form.FieldErrors.password}}
+        {{with .Form.FieldErrors.email}}
         <label class="error">{{.}}</label>
         {{end}}
         <input type="email" name="email" value="{{.Form.Email}}">

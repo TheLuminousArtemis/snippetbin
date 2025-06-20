@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/models"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/validator"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
-	snippets, err := app.snippets.Latest()
+	snippets, err := app.store.Snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -30,9 +30,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	snippet, err := app.snippets.Get(id)
+	snippet, err := app.store.Snippets.Get(id)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
+		if errors.Is(err, store.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)
@@ -81,7 +81,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+	id, err := app.store.Snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -100,7 +100,7 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 // users
 
 type userSignupForm struct {
-	Name                string `form:"name"`
+	Username            string `form:"username"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
 	validator.Validator `form:"-"`
@@ -121,22 +121,24 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
-	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "name", "This field must be a valid email address")
-	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
-	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be atleast 8 characters long")
+	// form.CheckField(validator.NotBlank(form.Username), "username", "This field cannot be blank")
+	// form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	// form.CheckField(validator.Matches(form.Email, validator.EmailRX), "name", "This field must be a valid email address")
+	// form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	// form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be atleast 8 characters long")
 
-	if !form.Valid() {
-		data := app.newTemplateData(r)
-		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
-		return
-	}
+	// if !form.Valid() {
+	// 	data := app.newTemplateData(r)
+	// 	data.Form = form
+	// 	app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
+	// 	return
+	// }
 
-	err = app.users.Insert(form.Name, form.Email, form.Password)
+	// log.Printf("transport layer username: %s, email: %s, password: %s", form.Username, form.Email, form.Password)
+
+	err = app.store.Users.Insert(form.Username, form.Email, form.Password)
 	if err != nil {
-		if errors.Is(err, models.ErrDuplicateEmail) {
+		if errors.Is(err, store.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email is already in use")
 
 			data := app.newTemplateData(r)
@@ -184,9 +186,9 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.users.Authenticate(form.Email, form.Password)
+	id, err := app.store.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidCredentials) {
+		if errors.Is(err, store.ErrInvalidCredentials) {
 			form.AddNonFieldError("Email or password is incorrect")
 			data := app.newTemplateData(r)
 			data.Form = form
