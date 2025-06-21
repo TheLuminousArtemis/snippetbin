@@ -10,11 +10,23 @@ import (
 	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/db"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/env"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
 )
+
+//todo
+//please change the validator
+//change from default router to chi
+//redis ratelimiter middleware
+
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New(validator.WithRequiredStructEnabled())
+}
 
 func main() {
 	cfg := config{

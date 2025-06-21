@@ -9,8 +9,8 @@ type Storage struct {
 		Latest() ([]Snippet, error)
 	}
 	Users interface {
-		Insert(string, string, string) error
-		Authenticate(string, string) (int, error)
+		Insert(*User) error
+		GetByEmail(string) (*User, error)
 		Exists(int) (bool, error)
 	}
 }
@@ -18,6 +18,6 @@ type Storage struct {
 func NewPostgresStore(db *sql.DB) Storage {
 	return Storage{
 		Snippets: &PostgresSnippet{DB: db},
-		Users:    &UserModel{DB: db},
+		Users:    &PostgresUserModel{DB: db},
 	}
 }
