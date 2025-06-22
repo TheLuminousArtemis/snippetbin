@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/form/v4"
-	"github.com/justinas/alice"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
 )
@@ -23,7 +25,7 @@ type config struct {
 
 type ratelimiterConfig struct {
 	RequestsPerTimeFrame int
-	TimeFrame            time.Duration
+	Timeframe            time.Duration
 	Enabled              bool
 }
 
@@ -47,33 +49,59 @@ type application struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
+	rateLimiter    ratelimiter.Limiter
 }
 
 func (app *application) routes() http.Handler {
-	//mux and file server setup
-	mux := http.NewServeMux()
-	fileServer := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
+	r := chi.NewRouter()
 
-	//snippet routes
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
-	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
-	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home))
-	mux.Handle("GET /snippet/view/{id}", dynamic.ThenFunc(app.snippetView))
+	// === Global middleware ===
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(app.recoverPanic)
+	r.Use(app.logRequest)
+	r.Use(commonHeaders)
 
-	//user routes
-	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
-	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
-	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
-	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
+	//ratelimiter
+	r.Use(app.RateLimiterMiddleware)
 
-	//about
-	mux.Handle("GET /about", dynamic.ThenFunc(app.about))
+	// === Static files ===
+	fs := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
+	r.Handle("/static/*", http.StripPrefix("/static", fs))
 
-	protected := dynamic.Append(app.requireAuthentication)
-	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetCreate))
-	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetCreatePost))
-	mux.Handle("POST /user/logout", protected.ThenFunc(app.userLogoutPost))
+	// === Public routes ===
+	r.Group(func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave)
+		r.Use(noSurf)
 
-	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
-	return standard.Then(mux)
+		r.Get("/health", app.health)
+
+		r.Get("/", app.home)
+		r.Get("/snippet/view/{id}", app.snippetView)
+
+		// User auth routes
+		r.Get("/user/signup", app.userSignup)
+		r.Post("/user/signup", app.userSignupPost)
+		r.Get("/user/login", app.userLogin)
+		r.Post("/user/login", app.userLoginPost)
+
+		// About page
+		r.Get("/about", app.about)
+	})
+
+	// === Protected routes ===
+	r.Group(func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave)
+		r.Use(noSurf)
+		r.Use(app.requireAuthentication)
+
+		r.Get("/snippet/create", app.snippetCreate)
+		r.Post("/snippet/create", app.snippetCreatePost)
+		r.Post("/user/logout", app.userLogoutPost)
+	})
+
+	return r
 }

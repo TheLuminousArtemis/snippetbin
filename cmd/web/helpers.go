@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,6 +21,12 @@ func (app *application) serverError(w http.ResponseWriter, r *http.Request, err 
 
 	app.logger.Error(err.Error(), "method", method, "uri", uri)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
+	app.logger.Info("rate limit exceeded", "remote_addr", r.RemoteAddr, "method", r.Method, "uri", r.URL.RequestURI(), "retryAfter", retryAfter)
+	w.Header().Set("Retry-After", retryAfter)
+	http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
@@ -72,4 +79,11 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 
 func (app *application) isAuthenticated(r *http.Request) bool {
 	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
+}
+
+func (app *application) writeJSON(w http.ResponseWriter, status int, data any) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	return json.NewEncoder(w).Encode(data)
+
 }

@@ -13,14 +13,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/db"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/env"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
 )
-
-//todo
-//please change the validator
-//change from default router to chi
-//redis ratelimiter middleware
 
 var validate *validator.Validate
 
@@ -45,7 +41,7 @@ func main() {
 		},
 		rlCfg: ratelimiterConfig{
 			RequestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_PER_TIME_FRAME", 20),
-			TimeFrame:            2 * time.Minute,
+			Timeframe:            2 * time.Minute,
 			Enabled:              env.GetBool("RATELIMITER_ENABLED", true),
 		},
 	}
@@ -79,6 +75,11 @@ func main() {
 	logger.Info("redis client established")
 	cache := cache.NewRedisStore(redisClient)
 
+	//ratelimiter
+	ratelimiter := ratelimiter.NewRedisFixedWindowRateLimiter(
+		cache, cfg.rlCfg.RequestsPerTimeFrame, cfg.rlCfg.Timeframe,
+	)
+
 	app := &application{
 		logger:         logger,
 		store:          store,
@@ -86,6 +87,7 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		rateLimiter:    ratelimiter,
 	}
 
 	tlsConfig := &tls.Config{

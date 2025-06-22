@@ -66,3 +66,19 @@ func noSurf(next http.Handler) http.Handler {
 
 	return csrfHandler
 }
+
+func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		allow, retryAfter, err := app.rateLimiter.Allow(ctx, r.RemoteAddr)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		if !allow {
+			app.rateLimitExceededResponse(w, r, retryAfter.String())
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
