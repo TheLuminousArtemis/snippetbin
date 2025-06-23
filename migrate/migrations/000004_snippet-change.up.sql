@@ -1,0 +1,2 @@
+ALTER TABLE snippets ADD COLUMN iv BYTEA;
+ALTER TABLE snippets ALTER COLUMN content TYPE BYTEA USING content::bytea;

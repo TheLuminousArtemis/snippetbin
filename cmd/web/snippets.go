@@ -1,37 +1,40 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-
-	snippets, err := app.store.Snippets.Latest()
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	data := app.newTemplateData(r)
-	data.Snippets = snippets
-	app.render(w, r, http.StatusOK, "home.html", data)
-
+type SnippetView struct {
+	ID      int
+	Title   string
+	Content string
+	Created time.Time
+	Expires time.Time
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	// id, err := strconv.Atoi(r.PathValue("id"))
+	idParam := chi.URLParam(r, "id")
+	keyParam := r.URL.Query().Get("key")
+	id, err := strconv.Atoi(idParam)
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
-	snippet, err := app.store.Snippets.Get(id)
+	dsnippet, err := app.store.Snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, store.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -41,7 +44,28 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	key, err := base64.RawURLEncoding.DecodeString(keyParam)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	plaintext, err := decryptAESGCM(dsnippet.Ciphertext, key, dsnippet.IV)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	snippet := &SnippetView{
+		ID:      dsnippet.ID,
+		Title:   dsnippet.Title,
+		Content: string(plaintext),
+		Created: dsnippet.Created,
+		Expires: dsnippet.Expires,
+	}
+
 	data := app.newTemplateData(r)
+
 	data.Snippet = snippet
 
 	app.render(w, r, http.StatusOK, "view.html", data)
@@ -93,13 +117,79 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	id, err := app.store.Snippets.Insert(form.Title, form.Content, form.Expires)
+	key, err := generateKey()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	plaintext := form.Content
+	ciphertext, nonce, err := encryptAESGCM([]byte(plaintext), key)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	snippet := &store.Snippet{
+		Title:      form.Title,
+		Ciphertext: ciphertext,
+		IV:         nonce,
+		Expires:    time.Now().AddDate(0, 0, form.Expires),
+	}
+
+	id, err := app.store.Snippets.Insert(snippet)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+	// encodedKey := base64.StdEncoding.EncodeToString(key)
+	encodedKey := base64.RawURLEncoding.EncodeToString(key)
+	// http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d?key=%s", id, encodedKey), http.StatusSeeOther)
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+}
 
+func generateKey() ([]byte, error) {
+	key := make([]byte, 32)
+	_, err := rand.Read(key)
+	return key, err
+}
+
+func encryptAESGCM(plaintext, key []byte) (ciphertext, nonce []byte, err error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nonce = make([]byte, gcm.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, nil, err
+	}
+
+	ciphertext = gcm.Seal(nil, nonce, plaintext, nil)
+	return ciphertext, nonce, nil
+}
+
+func decryptAESGCM(ciphertext, key, nonce []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(nonce) != gcm.NonceSize() {
+		return nil, errors.New("invalid nonce size")
+	}
+
+	return gcm.Open(nil, nonce, ciphertext, nil)
 }

@@ -1,30 +1,4 @@
 {{define "title"}}Home{{end}}
 {{define "main"}}
-<h2>
-    {{if gt (len .Snippets) 1}}
-    Latest Snippets
-    {{else if eq (len .Snippets) 1}}
-    Latest Snippet
-    {{else}}
-    No New Snippets
-    {{end}}
-</h2>
-{{if .Snippets}}
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Title</th>
-        <th>Created</th>
-    </tr>
-    {{range .Snippets}}
-    <tr>
-        <td>#{{.ID}}</td>
-        <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
-        <td>{{humanDate .Created}}</td>
-    </tr>
-    {{end}}
-</table>
-{{else}}
 <p>There's nothing here yet!</p>
-{{end}}
 {{end}}

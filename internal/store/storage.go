@@ -4,9 +4,9 @@ import "database/sql"
 
 type Storage struct {
 	Snippets interface {
-		Insert(string, string, int) (int, error)
-		Get(int) (Snippet, error)
-		Latest() ([]Snippet, error)
+		Insert(*Snippet) (int, error)
+		Get(int) (*Snippet, error)
+		// Latest() ([]Snippet, error)
 	}
 	Users interface {
 		Insert(*User) error

@@ -13,14 +13,14 @@ type RateLimitRedisStore struct {
 
 var window time.Duration = time.Minute * 2
 
-func (r *RateLimitRedisStore) GetCount(ctx context.Context, key string) (int, error) {
-	count, err := r.rdb.Get(ctx, key).Int()
-	if err == redis.Nil {
-		return 0, nil
-	}
-	return count, err
+// func (r *RateLimitRedisStore) GetCount(ctx context.Context, key string) (int, error) {
+// 	count, err := r.rdb.Get(ctx, key).Int()
+// 	if err == redis.Nil {
+// 		return 0, nil
+// 	}
+// 	return count, err
 
-}
+// }
 func (r *RateLimitRedisStore) Increment(ctx context.Context, key string) (int, error) {
 	count, err := r.rdb.Incr(ctx, key).Result()
 	if err != nil {

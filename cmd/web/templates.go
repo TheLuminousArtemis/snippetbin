@@ -4,13 +4,11 @@ import (
 	"html/template"
 	"path/filepath"
 	"time"
-
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 )
 
 type templateData struct {
-	Snippet         store.Snippet
-	Snippets        []store.Snippet
+	Snippet *SnippetView
+	// Snippets        []store.Snippet
 	CurrentYear     int
 	Form            any
 	Flash           string

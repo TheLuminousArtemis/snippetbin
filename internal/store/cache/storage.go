@@ -9,7 +9,7 @@ import (
 
 type Storage struct {
 	RedisRateLimit interface {
-		GetCount(ctx context.Context, key string) (int, error)
+		// GetCount(ctx context.Context, key string) (int, error)
 		Increment(ctx context.Context, key string) (int, error)
 		TTL(ctx context.Context, key string) (time.Duration, error)
 	}
