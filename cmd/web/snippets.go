@@ -34,7 +34,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	dsnippet, err := app.store.Snippets.Get(id)
+	ctx := r.Context()
+	dsnippet, err := app.store.Snippets.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, store.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -137,7 +138,8 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		Expires:    time.Now().AddDate(0, 0, form.Expires),
 	}
 
-	id, err := app.store.Snippets.Insert(snippet)
+	ctx := r.Context()
+	id, err := app.store.Snippets.Insert(ctx, snippet)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

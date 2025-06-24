@@ -64,8 +64,8 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-
-	err = app.store.Users.Insert(user)
+	ctx := r.Context()
+	err = app.store.Users.Insert(ctx, user)
 	if err != nil {
 		switch err {
 		case store.ErrDuplicateEmail:
@@ -133,8 +133,8 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
 		return
 	}
-
-	user, err := app.store.Users.GetByEmail(form.Email)
+	ctx := r.Context()
+	user, err := app.store.Users.GetByEmail(ctx, form.Email)
 	if err != nil {
 		if errors.Is(err, store.ErrInvalidCredentials) {
 			form.NonFieldErrors = []string{"Email or password is incorrect"}

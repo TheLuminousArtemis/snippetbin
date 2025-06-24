@@ -95,8 +95,8 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		exists, err := app.store.Users.Exists(id)
+		ctx := r.Context()
+		exists, err := app.store.Users.Exists(ctx, id)
 		if err != nil {
 			app.serverError(w, r, err)
 			return

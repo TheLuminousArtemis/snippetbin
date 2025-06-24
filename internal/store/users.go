@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -39,9 +40,11 @@ type PostgresUserModel struct {
 	DB *sql.DB
 }
 
-func (m *PostgresUserModel) Insert(user *User) error {
+func (m *PostgresUserModel) Insert(ctx context.Context, user *User) error {
 	stmt := "INSERT INTO users (username, email, password, created_at) VALUES($1, $2, $3, NOW())"
-	_, err := m.DB.Exec(stmt, user.Username, user.Email, user.Password.hash)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, stmt, user.Username, user.Email, user.Password.hash)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			switch pgErr.Constraint {
@@ -56,12 +59,14 @@ func (m *PostgresUserModel) Insert(user *User) error {
 	return nil
 }
 
-func (m *PostgresUserModel) GetByEmail(email string) (*User, error) {
+func (m *PostgresUserModel) GetByEmail(ctx context.Context, email string) (*User, error) {
 	// var id int
 	// var hashedPassword []byte
 	var user User
 	stmt := "SELECT id, password FROM users WHERE email=$1"
-	err := m.DB.QueryRow(stmt, email).Scan(&user.ID, &user.Password.hash)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, email).Scan(&user.ID, &user.Password.hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrInvalidCredentials
@@ -81,11 +86,12 @@ func (m *PostgresUserModel) GetByEmail(email string) (*User, error) {
 	return &user, err
 }
 
-func (m *PostgresUserModel) Exists(id int) (bool, error) {
+func (m *PostgresUserModel) Exists(ctx context.Context, id int) (bool, error) {
 	var exists bool
 
 	stmt := "SELECT EXISTS(SELECT 1 FROM users WHERE id=$1)"
-
-	err := m.DB.QueryRow(stmt, id).Scan(&exists)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&exists)
 	return exists, err
 }

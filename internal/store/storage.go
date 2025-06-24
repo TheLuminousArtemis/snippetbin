@@ -1,17 +1,23 @@
 package store
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"time"
+)
+
+var QueryTimeOutDuration = 5 * time.Second
 
 type Storage struct {
 	Snippets interface {
-		Insert(*Snippet) (int, error)
-		Get(int) (*Snippet, error)
+		Insert(context.Context, *Snippet) (int, error)
+		Get(context.Context, int) (*Snippet, error)
 		// Latest() ([]Snippet, error)
 	}
 	Users interface {
-		Insert(*User) error
-		GetByEmail(string) (*User, error)
-		Exists(int) (bool, error)
+		Insert(context.Context, *User) error
+		GetByEmail(context.Context, string) (*User, error)
+		Exists(context.Context, int) (bool, error)
 	}
 }
 
