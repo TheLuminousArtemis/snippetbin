@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/justinas/nosurf"
+	"golang.org/x/net/context"
 )
 
 func commonHeaders(next http.Handler) http.Handler {
@@ -81,4 +82,32 @@ func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+type contextKey string
+
+const isAuthenticatedKey contextKey = "isAuthenticated"
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		exists, err := app.store.Users.Exists(id)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedKey, true)
+			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
+	})
+
 }

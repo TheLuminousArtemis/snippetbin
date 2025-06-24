@@ -13,6 +13,7 @@ import (
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
+	"github.com/theluminousartemis/letsgo_snippetbox/ui"
 )
 
 type config struct {
@@ -69,13 +70,15 @@ func (app *application) routes() http.Handler {
 	r.Use(app.RateLimiterMiddleware)
 
 	// === Static files ===
-	fs := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
-	r.Handle("/static/*", http.StripPrefix("/static", fs))
+	// r.Get("/static", http.FileServerFS(ui.Files))
+	// fs := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
+	r.Handle("/static/*", http.StripPrefix("/static", http.FileServerFS(ui.Files)))
 
 	// === Public routes ===
 	r.Group(func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
 		r.Use(noSurf)
+		r.Use(app.authenticate)
 
 		r.Get("/health", app.health)
 
@@ -96,6 +99,7 @@ func (app *application) routes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
 		r.Use(noSurf)
+		r.Use(app.authenticate)
 		r.Use(app.requireAuthentication)
 
 		r.Get("/snippet/create", app.snippetCreate)
