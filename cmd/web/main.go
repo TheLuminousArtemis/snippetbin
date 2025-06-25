@@ -26,8 +26,8 @@ func init() {
 
 func main() {
 	cfg := config{
-		addr:      env.GetString("ADDR", ":4000"),
-		staticDir: env.GetString("STATIC_DIR", "./ui/static"),
+		addr: env.GetString("ADDR", ":4000"),
+		// staticDir: env.GetString("STATIC_DIR", "./ui/static"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost:5432/snippetbin?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),

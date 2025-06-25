@@ -17,11 +17,10 @@ import (
 )
 
 type config struct {
-	addr      string
-	staticDir string
-	db        dbConfig
-	redisCfg  redisConfig
-	rlCfg     ratelimiterConfig
+	addr     string
+	db       dbConfig
+	redisCfg redisConfig
+	rlCfg    ratelimiterConfig
 }
 
 type ratelimiterConfig struct {
@@ -66,8 +65,9 @@ func (app *application) routes() http.Handler {
 	r.Use(app.logRequest)
 	r.Use(commonHeaders)
 
-	//ratelimiter
-	r.Use(app.RateLimiterMiddleware)
+	// //ratelimiter
+	// r.Use(app.RateLimiterMiddleware)
+	r.Get("/ping", ping)
 
 	// === Static files ===
 	fileServer := http.FileServer(http.FS(ui.Files))
