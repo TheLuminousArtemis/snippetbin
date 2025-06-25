@@ -70,10 +70,6 @@ func (app *application) routes() http.Handler {
 	r.Use(app.RateLimiterMiddleware)
 
 	// === Static files ===
-	// fs := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static/")})
-
-	// r.Handle("/static/*", http.StripPrefix("/static", http.FileServerFS(ui.Files)))
-
 	fileServer := http.FileServer(http.FS(ui.Files))
 	r.Handle("/static/*", fileServer)
 
