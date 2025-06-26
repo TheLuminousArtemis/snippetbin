@@ -42,11 +42,11 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	}
 	buf := new(bytes.Buffer)
 
+	w.WriteHeader(status)
 	err := ts.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	w.WriteHeader(status)
 	buf.WriteTo(w)
 }
 
@@ -62,7 +62,7 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 func (app *application) decodePostForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
 	if err != nil {
-		return nil
+		return err
 	}
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {

@@ -15,3 +15,8 @@ migrate-down:
 .PHONY: go test
 test:
 	go test ./cmd/web -v
+
+# non cached tests
+.PHONY: go test
+test-new:
+	go test -count=1 ./cmd/web -v

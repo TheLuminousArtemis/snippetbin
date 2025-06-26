@@ -149,7 +149,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	encodedKey := base64.RawURLEncoding.EncodeToString(key)
 	// http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d?key=%s", id, encodedKey), http.StatusSeeOther)
-
 }
 
 func generateKey() ([]byte, error) {
