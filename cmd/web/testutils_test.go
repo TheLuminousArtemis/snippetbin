@@ -12,24 +12,41 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
 )
 
-func newTestApplication(t *testing.T) *application {
+func newConfig(t *testing.T) config {
+	t.Helper()
+	cfg := config{
+		rlCfg: ratelimiterConfig{
+			RequestsPerTimeFrame: 20,
+			Timeframe:            time.Second,
+			Enabled:              true,
+		},
+	}
+	return cfg
+}
+
+func newTestApplication(t *testing.T, cfg config) *application {
 	templateCache, err := newTemplateCache()
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	mockCache := cache.NewMockStorage()
 	formDecoder := form.NewDecoder()
 	sessionManager := scs.New()
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
+	ratelimiter := ratelimiter.NewRedisFixedWindowRateLimiter(mockCache, cfg.rlCfg.RequestsPerTimeFrame, cfg.rlCfg.Timeframe)
 
 	return &application{
 		logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		cache:          mockCache,
+		rateLimiter:    ratelimiter,
 	}
 }
 

@@ -66,7 +66,7 @@ func (app *application) routes() http.Handler {
 	r.Use(commonHeaders)
 
 	// //ratelimiter
-	// r.Use(app.RateLimiterMiddleware)
+	r.Use(app.RateLimiterMiddleware)
 	r.Get("/ping", ping)
 
 	// === Static files ===

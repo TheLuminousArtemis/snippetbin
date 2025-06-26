@@ -30,7 +30,8 @@ import (
 // }
 
 func TestPing(t *testing.T) {
-	app := newTestApplication(t)
+	cfg := newConfig(t)
+	app := newTestApplication(t, cfg)
 
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
