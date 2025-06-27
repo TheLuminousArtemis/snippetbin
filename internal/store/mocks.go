@@ -65,3 +65,16 @@ func (m *MockUserStore) Exists(ctx context.Context, id int) (bool, error) {
 		return false, nil
 	}
 }
+
+func (m *MockUserStore) GetByID(ctx context.Context, id int) (*User, error) {
+	switch id {
+	case 1:
+		return &MockUser, nil
+	default:
+		return nil, ErrInvalidCredentials
+	}
+}
+
+func (m *MockUserStore) PasswordUpdate(ctx context.Context, id int, currentPassword string, newPassword string) error {
+	return nil
+}

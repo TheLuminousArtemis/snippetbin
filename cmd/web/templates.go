@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
 	"github.com/theluminousartemis/letsgo_snippetbox/ui"
 )
 
@@ -17,6 +18,7 @@ type templateData struct {
 	Flash           string
 	IsAuthenticated bool
 	CSRFToken       string
+	User            store.User
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

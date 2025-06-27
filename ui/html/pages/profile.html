@@ -1,0 +1,24 @@
+{{define "title"}}Account{{end}}
+{{define "main"}}
+<h2>Account</h2>
+{{with .User}}
+<table>
+    <tr>
+        <th>Username</th>
+        <td>{{.Username}}</td>
+    </tr>
+    <tr>
+        <th>Email</th>
+        <td>{{.Email}}</td>
+    </tr>
+    <tr>
+        <th>Created At</th>
+        <td>{{humanDate .CreatedAt}}</td>
+    </tr>
+    <tr>
+        <th>Password</th>
+        <td><a href="/account/password_change">Change Password</a></td>
+    </tr>
+</table>
+{{end}}
+{{end}}

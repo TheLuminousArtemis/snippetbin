@@ -89,5 +89,4 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any) e
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(data)
-
 }

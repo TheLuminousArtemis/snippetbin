@@ -70,8 +70,8 @@ func (app *application) routes() http.Handler {
 	r.Get("/ping", ping)
 
 	// === Static files ===
-	fileServer := http.FileServer(http.FS(ui.Files))
-	r.Handle("/static/*", fileServer)
+	fs := http.FileServer(http.FS(ui.Files))
+	r.Handle("/static/*", fs)
 
 	// === Public routes ===
 	r.Group(func(r chi.Router) {
@@ -104,6 +104,9 @@ func (app *application) routes() http.Handler {
 		r.Get("/snippet/create", app.snippetCreate)
 		r.Post("/snippet/create", app.snippetCreatePost)
 		r.Post("/user/logout", app.userLogoutPost)
+		r.Get("/account/", app.userProfile)
+		r.Get("/account/password_change", app.userPasswordUpdate)
+		r.Post("/account/password_change", app.userPasswordUpdatePost)
 	})
 
 	return r

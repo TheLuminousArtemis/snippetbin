@@ -30,7 +30,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form userSignupForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
-		app.clientError(w, http.StatusAccepted)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
@@ -178,4 +178,87 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	ctx := r.Context()
+	user, err := app.store.Users.GetByID(ctx, id)
+	if err != nil {
+		switch err {
+		case store.ErrNoRecord:
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		default:
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	data := app.newTemplateData(r)
+	data.User = *user
+	app.render(w, r, http.StatusOK, "profile.html", data)
+}
+
+type accountPasswordUpdateForm struct {
+	CurrentPassword    string            `form:"currentPassword" validate:"required"`
+	NewPassword        string            `form:"newPassword" validate:"required,min=8"`
+	NewPasswordConfirm string            `form:"newPasswordConfirmation" validate:"required,min=8,eqfield=NewPassword"`
+	FieldErrors        map[string]string `form:"-"`
+}
+
+func (app *application) userPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	var form accountPasswordUpdateForm
+	data := app.newTemplateData(r)
+	data.Form = form
+	app.render(w, r, http.StatusOK, "password.html", data)
+}
+
+func (app *application) userPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+	var form accountPasswordUpdateForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if err := validate.Struct(form); err != nil {
+		form.FieldErrors = make(map[string]string)
+		if ve, ok := err.(validator.ValidationErrors); ok {
+			for _, fe := range ve {
+				field := strings.ToLower(fe.Field())
+				switch fe.Tag() {
+				case "required":
+					form.FieldErrors[field] = "This field cannot be blank"
+				case "min":
+					form.FieldErrors[field] = "This field must be atleast 8 characters long"
+				case "eqfield":
+					form.FieldErrors[field] = "Passwords do not match"
+				}
+			}
+		}
+		// fmt.Printf("Field errors: %#v\n", form.FieldErrors)
+
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "password.html", data)
+		return
+	}
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	ctx := r.Context()
+	err = app.store.Users.PasswordUpdate(ctx, id, form.CurrentPassword, form.NewPassword)
+	if err != nil {
+		switch err {
+		case store.ErrInvalidCredentials:
+			form.FieldErrors = map[string]string{"currentPassword": "Current password is incorrect"}
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "password.html", data)
+			return
+		default:
+			app.serverError(w, r, err)
+			return
+		}
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Password updated successfully")
+	http.Redirect(w, r, "/account/", http.StatusSeeOther)
 }

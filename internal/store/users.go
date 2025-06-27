@@ -95,3 +95,60 @@ func (m *PostgresUserModel) Exists(ctx context.Context, id int) (bool, error) {
 	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&exists)
 	return exists, err
 }
+
+func (m *PostgresUserModel) GetByID(ctx context.Context, id int) (*User, error) {
+	var user User
+	stmt := "SELECT username, email, created_at FROM users WHERE id=$1"
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&user.Username, &user.Email, &user.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrInvalidCredentials
+		} else {
+			return nil, err
+		}
+	}
+	return &user, nil
+}
+
+func (m *PostgresUserModel) PasswordUpdate(ctx context.Context, id int, currentPassword string, newPassword string) error {
+	return withTx(ctx, m.DB, func(tx *sql.Tx) error {
+		user, err := m.getPasswordByID(ctx, tx, id)
+		if err != nil {
+			return err
+		}
+
+		if err := user.Password.Compare(currentPassword); err != nil {
+			return ErrInvalidCredentials
+		}
+
+		user.Password.Set(newPassword)
+		return m.updatePassword(ctx, tx, user)
+	})
+}
+
+func (m *PostgresUserModel) getPasswordByID(ctx context.Context, tx *sql.Tx, id int) (*User, error) {
+	var user User
+	stmt := "SELECT password from users WHERE ID = $1"
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+	err := tx.QueryRowContext(ctx, stmt, id).Scan(&user.Password.hash)
+	if err != nil {
+		return nil, err
+	}
+	return &user, err
+}
+
+func (m *PostgresUserModel) updatePassword(ctx context.Context, tx *sql.Tx, u *User) error {
+	stmt := "UPDATE users SET password = $1 WHERE id = $2"
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+
+	_, err := tx.ExecContext(ctx, stmt, u.Password.hash, u.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

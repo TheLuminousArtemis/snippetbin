@@ -3,6 +3,7 @@ package ratelimiter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
@@ -23,6 +24,7 @@ func NewRedisFixedWindowRateLimiter(store cache.Storage, limit int, window time.
 }
 
 func (r *RedisFixedWindowRateLimiter) Allow(ctx context.Context, ip string) (bool, time.Duration, error) {
+	slog.Info(ip)
 	key := fmt.Sprintf("ratelimit:%s", ip)
 
 	count, err := r.store.RedisRateLimit.Increment(ctx, key)

@@ -53,7 +53,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	plaintext, err := decryptAESGCM(dsnippet.Ciphertext, key, dsnippet.IV)
 	if err != nil {
-		app.serverError(w, r, err)
+		app.sessionManager.Put(r.Context(), "flash", "Invalid key! Try again")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/justinas/nosurf"
 	"golang.org/x/net/context"
@@ -70,6 +71,16 @@ func noSurf(next http.Handler) http.Handler {
 
 func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/static/") {
+			app.logger.Info("not rate limited")
+			next.ServeHTTP(w, r)
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/ping") || strings.HasPrefix(r.URL.Path, "/health") {
+			app.logger.Info("not rate limited")
+			next.ServeHTTP(w, r)
+			return
+		}
 		ctx := r.Context()
 		allow, retryAfter, err := app.rateLimiter.Allow(ctx, r.RemoteAddr)
 		if err != nil {
