@@ -35,7 +35,8 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		redisCfg: redisConfig{
-			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			addr: env.GetString("REDIS_ADDR", "localhost:6379"),
+			// addr:     env.GetString("REDIS_ADDR", "snippetbin-redis:6379"),
 			password: env.GetString("REDIS_PASSWORD", ""),
 			db:       env.GetInt("REDIS_DB", 0),
 		},

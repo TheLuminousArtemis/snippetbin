@@ -56,9 +56,9 @@ func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
 	// === Global middleware ===
-	// r.Use(middleware.RequestID)
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
-	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(commonHeaders)

@@ -1,4 +1,17 @@
 services:
+  web:
+    build: .
+    container_name: snippetbin-web
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - REDIS_ADDR=snippetbin-redis:6379
+      - DB_ADDR=postgres://admin:adminpassword@snippetbin-db:5432/snippetbin?sslmode=disable
+    volumes:
+      - ./tls:/app/tls
   db:
     image: postgres:latest
     container_name: snippetbin-db
@@ -32,3 +45,5 @@ services:
 
 volumes:
   db_data:
+
+
