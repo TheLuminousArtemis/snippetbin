@@ -11,7 +11,7 @@ var QueryTimeOutDuration = 5 * time.Second
 type Storage struct {
 	Snippets interface {
 		Insert(context.Context, *Snippet) (int, error)
-		Get(context.Context, int) (*Snippet, error)
+		Get(context.Context, int64) (*Snippet, error)
 		// Latest() ([]Snippet, error)
 	}
 	Users interface {

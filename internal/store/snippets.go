@@ -8,7 +8,7 @@ import (
 )
 
 type Snippet struct {
-	ID    int
+	ID    int64
 	Title string
 	// Content string
 	Ciphertext []byte
@@ -39,7 +39,7 @@ func (m *PostgresSnippet) Insert(ctx context.Context, snippet *Snippet) (int, er
 	return id, nil
 }
 
-func (m *PostgresSnippet) Get(ctx context.Context, id int) (*Snippet, error) {
+func (m *PostgresSnippet) Get(ctx context.Context, id int64) (*Snippet, error) {
 	stmt := "SELECT id, title, content, iv,created, expires FROM snippets WHERE expires > NOW() and id=$1"
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
 	defer cancel()

@@ -1,4 +1,52 @@
 {{define "title"}}Home{{end}}
 {{define "main"}}
-<p>There's nothing here yet!</p>
+<h1>Welcome to SnippetBin!</h1>
+<br>
+<ul>
+    <li>
+        Snippets are encrypted at rest using the AES-256-GCM algorithm with a randomly generated 32-byte key.
+    </li>
+    <li>
+        This encryption key is generated per snippet and is <strong>never stored</strong> on our servers.
+    </li>
+    <li>
+        Only you — or anyone with the full link — can decrypt and view the snippet. If the key is lost, the data is
+        <strong>permanently unrecoverable</strong>.
+    </li>
+    <li>
+        The key is included in the URL as a query parameter (`?key=...`). You must keep this link safe — it is the only
+        way to access the snippet contents.
+    </li>
+    <li>
+        Only minimal metadata is stored in plaintext: the snippet title, creation date, and expiry date.
+    </li>
+    <li>
+        User account creation is required to prevent abuse, but snippets are not linked to user accounts in the
+        database.
+    </li>
+    <li>
+        Access logging is disabled to ensure privacy. If enabled, logs would include full URLs (and thus keys), making
+        snippets potentially visible to system administrators.
+    </li>
+    <li>
+        IP-based rate limiting is enforced to prevent abuse of the platform.
+    </li>
+</ul>
+<br>
+<p><strong>Important Note:</strong> While existing encrypted data is safe from server access, anyone with control over
+    the web server could:</p>
+<br>
+<ul>
+    <li>
+        View decrypted snippet contents, since decryption happens server-side before sending over HTTPS.
+    </li>
+    <li>
+        Modify server logic to capture and log submitted encryption keys.
+    </li>
+    <li>
+        Enable request logging, which would expose keys in the query parameters.
+    </li>
+</ul>
+
+
 {{end}}

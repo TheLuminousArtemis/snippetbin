@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
+	"github.com/theluminousartemis/snippetbin/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
 

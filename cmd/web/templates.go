@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
-	"github.com/theluminousartemis/letsgo_snippetbox/ui"
+	"github.com/theluminousartemis/snippetbin/internal/store"
+	"github.com/theluminousartemis/snippetbin/ui"
 )
 
 type templateData struct {

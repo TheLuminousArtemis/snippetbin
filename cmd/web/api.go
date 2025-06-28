@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/form/v4"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
-	"github.com/theluminousartemis/letsgo_snippetbox/ui"
+	"github.com/theluminousartemis/snippetbin/internal/ratelimiter"
+	"github.com/theluminousartemis/snippetbin/internal/store"
+	"github.com/theluminousartemis/snippetbin/internal/store/cache"
+	"github.com/theluminousartemis/snippetbin/ui"
 )
 
 type config struct {
@@ -56,13 +56,11 @@ func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
 	// === Global middleware ===
-	r.Use(middleware.RequestID)
+	// r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(app.recoverPanic)
-	r.Use(app.logRequest)
 	r.Use(commonHeaders)
 
 	// //ratelimiter

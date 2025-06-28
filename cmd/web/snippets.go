@@ -14,11 +14,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
+	"github.com/theluminousartemis/snippetbin/internal/store"
 )
 
 type SnippetView struct {
-	ID      int
+	ID      int64
 	Title   string
 	Content string
 	Created time.Time
@@ -29,7 +29,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// id, err := strconv.Atoi(r.PathValue("id"))
 	idParam := chi.URLParam(r, "id")
 	keyParam := r.URL.Query().Get("key")
-	id, err := strconv.Atoi(idParam)
+	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return

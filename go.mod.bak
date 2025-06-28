@@ -1,4 +1,4 @@
-module github.com/theluminousartemis/snippetbin
+module your/new/module/path
 
 go 1.23.5
 

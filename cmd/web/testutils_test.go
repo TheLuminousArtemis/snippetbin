@@ -16,9 +16,9 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
+	"github.com/theluminousartemis/snippetbin/internal/ratelimiter"
+	"github.com/theluminousartemis/snippetbin/internal/store"
+	"github.com/theluminousartemis/snippetbin/internal/store/cache"
 )
 
 func newConfig(t *testing.T) config {

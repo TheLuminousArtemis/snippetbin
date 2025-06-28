@@ -20,7 +20,7 @@ func (m *MockSnippetStore) Insert(ctx context.Context, s *Snippet) (int, error) 
 	return 2, nil
 }
 
-func (m *MockSnippetStore) Get(ctx context.Context, id int) (*Snippet, error) {
+func (m *MockSnippetStore) Get(ctx context.Context, id int64) (*Snippet, error) {
 	switch id {
 	case 1:
 		return &m.Snippet, nil

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/assert"
+	"github.com/theluminousartemis/snippetbin/internal/assert"
 )
 
 func TestUserSignup(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/assert"
+	"github.com/theluminousartemis/snippetbin/internal/assert"
 )
 
 func TestSnippetView(t *testing.T) {

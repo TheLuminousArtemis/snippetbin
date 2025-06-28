@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
+	"github.com/theluminousartemis/snippetbin/internal/store/cache"
 )
 
 type RedisFixedWindowRateLimiter struct {

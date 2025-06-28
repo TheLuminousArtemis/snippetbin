@@ -11,11 +11,11 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/db"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/env"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/ratelimiter"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store"
-	"github.com/theluminousartemis/letsgo_snippetbox/internal/store/cache"
+	"github.com/theluminousartemis/snippetbin/internal/db"
+	"github.com/theluminousartemis/snippetbin/internal/env"
+	"github.com/theluminousartemis/snippetbin/internal/ratelimiter"
+	"github.com/theluminousartemis/snippetbin/internal/store"
+	"github.com/theluminousartemis/snippetbin/internal/store/cache"
 )
 
 var validate *validator.Validate
