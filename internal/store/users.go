@@ -19,7 +19,7 @@ type User struct {
 }
 
 type password struct {
-	text *string
+	// text *string
 	hash []byte
 }
 
